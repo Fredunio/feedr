@@ -21,13 +21,21 @@
     @apply block w-full px-3 py-2 border md:text-lg border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-slate-500 focus:border-slate-500;
   }
 
-  .profile-tab {
+  .account-tab {
     @apply text-xl text-slate-800 px-3 py-1 rounded-md cursor-pointer font-semibold hover:text-primary transition-colors duration-75;
   }
 
-  .profile-active-tab {
-    @apply text-primary border-1 hover:bg-slate-50;
+  .account-active-tab {
+    @apply text-primary border-1 hover:bg-slate-50 shadow-sm;
   }
 
+  .btn-primary {
+    @apply bg-primary text-slate-50 hover:bg-primaryLight active:bg-primaryDark rounded-md text-lg font-semibold;
+  }
+
+  .btn-secondary {
+    @apply border-1 bg-slate-50 text-slate-900 hover:bg-slate-100 active:bg-slate-200 rounded-md text-lg;
+  }
+  
 
 }

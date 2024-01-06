@@ -33,7 +33,6 @@ export default function RegisterPage() {
     });
 
     const responseJson = await response.json();
-    console.log(responseJson);
     if (responseJson.error) {
       setError(responseJson.message);
       setCreatingAccount(false);
@@ -41,7 +40,6 @@ export default function RegisterPage() {
     }
 
     if (!response.ok) {
-      console.log(response);
       setError("Something went wrong, please try again later.");
       setCreatingAccount(false);
       return;

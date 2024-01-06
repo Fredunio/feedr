@@ -9,12 +9,10 @@ export async function POST(req: Request) {
   mongoose.connect(process.env.DATABASE_URL);
 
   const body = await req.json();
-  console.log(body);
   const pass = body.password;
   const passConfirm = body.passwordConfirmation;
 
   if (!pass?.length || pass.length < 8) {
-    console.log("password must be at least 8 characters");
     return Response.json({
       message: "Password must be at least 8 characters",
       error: true,
@@ -22,7 +20,6 @@ export async function POST(req: Request) {
   }
 
   if (!passConfirm?.length || pass !== passConfirm) {
-    console.log("passwords do not match");
     return Response.json({
       message: "Passwords do not match",
       error: true,
@@ -40,14 +37,12 @@ export async function POST(req: Request) {
       password: body.password,
     });
   } catch (err) {
-    console.log(err);
     return Response.json({
       message: "Email already in use",
       error: true,
     });
   }
 
-  console.log({ body });
   return Response.json({
     user: createdUser,
     message: "Account Created",

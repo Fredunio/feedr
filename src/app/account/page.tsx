@@ -7,11 +7,14 @@ import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Image from "next/image";
-import { DevTool } from "@hookform/devtools";
+import AddressForm from "./AddressForm";
+import useSWR from "swr";
+import { fetcher } from "../lib/fetcher";
+import { TUser } from "../models/User";
 
 const schemaNames = yup
   .object({
-    name: yup.string().min(3, "Name must be at least 3 characters"),
+    userName: yup.string().min(3, "Name must be at least 3 characters"),
     email: yup.string().email(),
   })
   .required();
@@ -22,25 +25,30 @@ const schemaImage = yup
   })
   .required();
 
-export default function ProfilePage() {
+export default function AccountPage() {
   const session = useSession();
   const path = usePathname();
 
   const {
+    data: profileData,
+    error: errorProfile,
+    isLoading: isLoadingProfile,
+  } = useSWR<TUser>("/api/profile", fetcher);
+
+  const {
     register,
     handleSubmit,
-    control,
-    setValue,
-    getValues,
-    watch,
     formState: { errors, isSubmitting, isLoading, isValidating },
   } = useForm({
+    disabled:
+      session.status === "unauthenticated" ||
+      isLoadingProfile ||
+      !session.data?.user,
+
     resolver: yupResolver(schemaNames),
     defaultValues: async () => {
-      console.log("user: ", user);
-
       return {
-        name: user?.name || undefined,
+        userName: user?.name || undefined,
         email: user?.email || undefined,
       };
     },
@@ -56,7 +64,6 @@ export default function ProfilePage() {
       errors: errorsImage,
       isSubmitting: isSubmittingImage,
       isLoading: isLoadingImage,
-      isValidating: isValidatingImage,
     },
   } = useForm({
     resolver: yupResolver(schemaImage),
@@ -72,17 +79,16 @@ export default function ProfilePage() {
   const onSubmit: SubmitHandler<yup.InferType<typeof schemaNames>> = async (
     data
   ) => {
-    console.log("data names: ", data);
-
     toast.promise(
       fetch("/api/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: data.name }),
-      }),
-
+        body: JSON.stringify({ name: data.userName }),
+      })
+        .then((res) => res.json())
+        .then((res) => {}),
       {
         loading: "Updating profile...",
         success: "Profile updated!",
@@ -94,30 +100,50 @@ export default function ProfilePage() {
   const onImageSubmit: SubmitHandler<
     yup.InferType<typeof schemaImage>
   > = async (data) => {
-    console.log("data: ", data);
+    if (!data.image || data.image.length === 0) {
+      return;
+    }
+    const formData = new FormData();
+
+    // TODO: check why data.image is [object File]
+    formData.set("file", getValuesImage("image")![0]);
+
+    const uploadPromise = fetch("/api/uploadImage", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Error uploading image");
+      })
+      .then((link) => {
+        fetch("/api/profile", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image: link }),
+        }).then(() => {
+          setValueImage("image", undefined);
+        });
+      });
+
+    toast.promise(uploadPromise, {
+      loading: "Updating profile image...",
+      success: "Profile image updated!",
+      error: "Error updating profile image",
+    });
   };
 
-  return (
-    <section className="max-w-2xl mx-auto py-12">
-      <div className="flex mx-auto gap-2 justify-start flex-wrap mb-20 border-b-1 pb-6 border-slate-200">
-        <Link
-          className={`${
-            path === "/profile" ? "profile-active-tab" : ""
-          } profile-tab`}
-          href={"/profile"}
-        >
-          Profile
-        </Link>
+  const imagePreview =
+    watchImage("image") !== undefined && watchImage("image")![0] !== undefined
+      ? URL.createObjectURL(watchImage("image")[0])
+      : user?.image || "/default-avatar.jpg";
 
-        <Link
-          className={`${
-            path === "/orders" ? "profile-active-tab" : ""
-          } profile-tab`}
-          href={"/orders"}
-        >
-          Orders
-        </Link>
-      </div>
+  return (
+    <div className="flex flex-col gap-20">
       <div className="">
         <h2 className="text-2xl font-extrabold mb-8">Personal</h2>
         <div className="flex items-start justify-center gap-20">
@@ -125,17 +151,18 @@ export default function ProfilePage() {
             onSubmit={handleSubmitImage(onImageSubmit)}
             className="flex flex-col gap-2"
           >
-            <button
+            <label
+              tabIndex={0}
+              htmlFor="image"
               title="Avatar"
-              type="button"
-              className="group relative"
-              onClick={() => {
-                document.getElementById("image")?.click();
-              }}
+              className="group relative cursor-pointer"
+              // onClick={() => {
+              //   document.getElementById("image")?.click();
+              // }}
             >
               <Image
                 alt="Profile Image"
-                src={user?.image || "/default-avatar.jpg"}
+                src={imagePreview}
                 width={200}
                 height={200}
                 className="rounded-md group-hover:opacity-50 transition-opacity duration-100"
@@ -154,14 +181,23 @@ export default function ProfilePage() {
                   d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
                 />
               </svg>
-            </button>
+            </label>
             <input
+              title="Avatar"
               type="file"
+              accept="image/jpeg,image/png,image/webp"
               id="image"
               className="border hidden border-gray-300 rounded-md"
               {...registerImage("image")}
             />
             <button
+              disabled={
+                getValuesImage("image") === undefined ||
+                getValuesImage("image")!.length === 0 ||
+                isSubmittingImage ||
+                isLoadingImage ||
+                Boolean(errorsImage.image?.message)
+              }
               type="submit"
               className="border-1  text-primaryDark hover:border-primaryLight text-lg px-4 py-2 rounded-md"
             >
@@ -180,16 +216,16 @@ export default function ProfilePage() {
               type="text"
               id="name"
               className="border text-input border-gray-300 rounded-md"
-              {...register("name")}
+              {...register("userName")}
             />
-            <label className="input-label" htmlFor="username">
+            <label className="input-label" htmlFor="email">
               Email
             </label>
             <div className="flex items-center gap-2">
               <input
                 disabled
                 type="text"
-                id="username"
+                id="email"
                 className="border text-input border-gray-300 rounded-md"
                 {...register("email")}
               />
@@ -207,7 +243,6 @@ export default function ProfilePage() {
               >
                 Cancel
               </button>
-
               <button
                 type="submit"
                 className="bg-primary hover:bg-primaryLight font-semibold active:bg-primaryDark  text-white text-lg px-4 py-2 rounded-md"
@@ -219,6 +254,7 @@ export default function ProfilePage() {
           {/* <DevTool control={control} /> */}
         </div>
       </div>
-    </section>
+      <AddressForm />
+    </div>
   );
 }

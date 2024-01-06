@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
@@ -59,7 +59,6 @@ export const authOptions: NextAuthOptions = {
         }
         const email = credentials?.email;
         const password = credentials?.password;
-        console.log("credentials", credentials);
 
         connectMongoose();
 
@@ -67,22 +66,31 @@ export const authOptions: NextAuthOptions = {
         try {
           user = await User.findOne({ email });
         } catch (error) {
-          console.error(error);
           return null;
         }
-        console.log("user", user);
         const passwordOk = user && bcrypt.compareSync(password, user.password);
-        console.log("passwordOk", passwordOk);
 
         if (passwordOk) {
           return user;
         }
-        console.log("return null");
         return null;
       },
     }),
   ],
 };
+
+export async function isAdmin() {
+  const session = await getServerSession(authOptions);
+  const userEmail = session?.user?.email;
+  if (!userEmail) {
+    return false;
+  }
+  const user = await User.findOne({ email: userEmail });
+  if (!user) {
+    return false;
+  }
+  return user.admin;
+}
 
 const handler = NextAuth(authOptions);
 

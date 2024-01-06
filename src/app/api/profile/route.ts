@@ -1,5 +1,4 @@
 import { connectMongoose } from "@/app/lib/clients/connectMongoose";
-import mongoose from "mongoose";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { User } from "@/app/models/User";
@@ -22,7 +21,7 @@ export async function PUT(req: Request) {
   }
 
   const user = await User.findOne(filter);
-  await User.updateOne(filter, { name, image });
+  await User.updateOne(filter, { name, image, ...otherUserInfo });
 
   return Response.json(true);
 }

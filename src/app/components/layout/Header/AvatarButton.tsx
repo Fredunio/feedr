@@ -5,17 +5,13 @@ import Link from "next/link";
 import React from "react";
 
 function AvatarButton({ user }: { user: Session["user"] | undefined }) {
-  const [open, setOpen] = React.useState(false);
-
   return (
     <div className="relative group inline-block ">
       <div>
         <button
           type="button"
-          onClick={() => setOpen(!open)}
-          className=" rounded-full shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          className="w-10 h-10 rounded-full shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
           id="menu-button"
-          aria-expanded={open}
           aria-haspopup="true"
         >
           {user && user.image ? (
@@ -24,7 +20,7 @@ function AvatarButton({ user }: { user: Session["user"] | undefined }) {
               alt={"avatar"}
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full object-cover w-full h-full"
             />
           ) : (
             <Image
@@ -32,7 +28,7 @@ function AvatarButton({ user }: { user: Session["user"] | undefined }) {
               alt={"avatar"}
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full object-cover w-full h-full"
             />
           )}
         </button>
@@ -50,7 +46,7 @@ function AvatarButton({ user }: { user: Session["user"] | undefined }) {
           role="none"
         >
           <Link
-            href="#"
+            href="/account"
             className="text-slate-700 hover:bg-slate-200 rounded-md active:bg-slate-300 block px-10 py-1 "
             role="menuitem"
             tabIndex={-1}
@@ -59,7 +55,7 @@ function AvatarButton({ user }: { user: Session["user"] | undefined }) {
           </Link>
 
           <Link
-            href="#"
+            href="/orders"
             className="text-slate-700 hover:bg-slate-200 rounded-md active:bg-slate-300 block px-10 py-1 "
             role="menuitem"
             tabIndex={-1}
