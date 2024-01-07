@@ -4,7 +4,6 @@ import { useForm } from "react-hook-form";
 import * as yup from "yup";
 import { SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import { TUser } from "../models/User";
 
 const schema = yup.object({
   streetAddress: yup.string(),
@@ -15,8 +14,15 @@ const schema = yup.object({
   zip: yup.string(),
 });
 
-type TAddressValues = yup.InferType<typeof schema>;
-function AddressForm() {
+export type TAddressValues = yup.InferType<typeof schema>;
+
+function AddressForm({
+  defaultValues,
+  onSubmit,
+}: {
+  defaultValues: TAddressValues;
+  onSubmit: SubmitHandler<TAddressValues>;
+}) {
   const {
     register,
     handleSubmit,
@@ -24,46 +30,25 @@ function AddressForm() {
   } = useForm({
     resolver: yupResolver(schema),
     // disabled: isSubmitting,
-    defaultValues: async () =>
-      fetch("/api/profile", {
-        method: "GET",
-      })
-        .then((res) => {
-          if (res.ok) {
-            return res.json();
-          }
-          throw new Error("Error getting Address Information");
-        })
-        .then((data) => {
-          return data;
-        }),
+    defaultValues: async (dataTest) => {
+      console.log("dataTest", dataTest);
+      console.log("defaultValues", defaultValues);
+      return {
+        city: defaultValues?.city || undefined,
+        country: defaultValues?.country || undefined,
+        state: defaultValues?.state || undefined,
+        streetAddress: defaultValues?.streetAddress || undefined,
+        zip: defaultValues?.zip || undefined,
+        phoneNumber: defaultValues?.phoneNumber || undefined,
+      };
+    },
   });
-
-  const onSubmitForm: SubmitHandler<yup.InferType<typeof schema>> = async (
-    data
-  ) => {
-    const savePromise = fetch("/api/profile", {
-      method: "PUT",
-      body: JSON.stringify(data),
-    }).then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      throw new Error("Error updating Address Information");
-    });
-
-    toast.promise(savePromise, {
-      loading: "Updating addess...",
-      success: "Address updated!",
-      error: "Error updating address",
-    });
-  };
 
   return (
     <div>
       <h2 className="text-2xl font-bold mb-8">Address</h2>
       <form
-        onSubmit={handleSubmit(onSubmitForm)}
+        onSubmit={handleSubmit(onSubmit)}
         className="flex flex-col w-full gap-2 "
       >
         <label className="input-label" htmlFor="street">

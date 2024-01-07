@@ -10,7 +10,11 @@ const MenuItemSchema = new Schema(
     image: { type: String, required: true },
     name: { type: String, required: true },
     description: { type: String },
-    category: { type: mongoose.Types.ObjectId },
+    category: {
+      type: mongoose.Types.ObjectId,
+      required: true,
+      ref: "Category",
+    },
     basePrice: { type: Number, required: true },
     sizes: { type: [ExtraPriceSchema] },
     extras: { type: [ExtraPriceSchema] },
@@ -19,4 +23,14 @@ const MenuItemSchema = new Schema(
 );
 
 export const MenuItem = models?.MenuItem || model("MenuItem", MenuItemSchema);
-export type TMenuItem = InferSchemaType<typeof MenuItemSchema>;
+export type TMenuItem = InferSchemaType<typeof MenuItemSchema> & {
+  _id: string;
+};
+
+// export type CartItem = {
+//   _id: string;
+//   name: string;
+//   image: string;
+//   basePrice: number;
+//   size: string;
+// };

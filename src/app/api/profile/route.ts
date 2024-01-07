@@ -6,7 +6,7 @@ import { User } from "@/app/models/User";
 export async function PUT(req: Request) {
   connectMongoose();
   const data = await req.json();
-  const { _id, name, image, ...otherUserInfo } = data;
+  const { _id, name, image, admin, ...otherUserInfo } = data;
 
   let filter = {};
   if (_id) {

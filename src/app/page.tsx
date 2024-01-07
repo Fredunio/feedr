@@ -7,7 +7,7 @@ import Footer from "./components/layout/Footer";
 
 export default function Home() {
   return (
-    <div className="flex flex-col page-container gap-48 py-24">
+    <div className="flex flex-col page-container gap-20 py-24">
       <Hero />
       <HomeMenuSection />
       <HomeAboutSection />

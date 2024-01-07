@@ -28,8 +28,15 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const _id = url.searchParams.get("_id");
+  const limit = url.searchParams.get("limit");
+
   if (_id) {
     return Response.json(await MenuItem.findById(_id));
+  }
+  if (limit) {
+    return Response.json(
+      await MenuItem.find().sort({ createdAt: -1 }).limit(Number(limit))
+    );
   }
 
   return Response.json(await MenuItem.find());

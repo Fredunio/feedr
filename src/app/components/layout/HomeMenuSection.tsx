@@ -3,11 +3,20 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import SectionHeaders from "./SectionHeader";
 import MenuItem from "../menu/MenuItem";
+import useSWR from "swr";
+import { TMenuItem } from "@/app/models/MenuItem";
+import { fetcher } from "@/app/lib/fetcher";
+import MenuItemCard from "../cards/MenuItemCard";
 
 export default function HomeMenuSection() {
+  const { data: menuItems } = useSWR<(TMenuItem & { _id: string })[]>(
+    "/api/menuItems?limit=3",
+    fetcher
+  );
+
   return (
-    <section className="">
-      <div className="absolute left-0 right-0 w-full justify-start">
+    <section className="mt-20">
+      <div className="absolute left-0 right-0 w-full justify-start ">
         <div className="absolute left-0 -top-[70px] text-left -z-10">
           <Image src={"/sallad1.png"} width={109} height={189} alt={"sallad"} />
         </div>
@@ -19,13 +28,17 @@ export default function HomeMenuSection() {
         <SectionHeaders mainHeader={"Our Best Sellers"} />
       </div>
       <div className="grid sm:grid-cols-3 gap-4">
-        <MenuItem />
+        {menuItems?.map((menuItem) => (
+          <MenuItemCard key={menuItem._id} menuItem={menuItem} />
+        ))}
+
+        {/* <MenuItem />
         <MenuItem />
         <MenuItem />
 
         <MenuItem />
         <MenuItem />
-        <MenuItem />
+        <MenuItem /> */}
       </div>
     </section>
   );

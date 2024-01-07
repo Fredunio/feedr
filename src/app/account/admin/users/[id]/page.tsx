@@ -1,49 +1,39 @@
 "use client";
-import { useSession } from "next-auth/react";
-import { redirect, usePathname } from "next/navigation";
+
+import AddressForm, { TAddressValues } from "@/app/account/AddressForm";
+import AvatarForm, { schemaImage } from "@/app/account/AvatarForm";
+import UserForm, { TFormUserData } from "@/app/account/UserForm";
+import { fetcher } from "@/app/lib/fetcher";
+import { TUser } from "@/app/models/User";
+import React from "react";
+import { SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
-import Link from "next/link";
-import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { SubmitHandler, useForm } from "react-hook-form";
-import Image from "next/image";
-import AddressForm from "./AddressForm";
 import useSWR from "swr";
-import { fetcher } from "../lib/fetcher";
-import { TUser } from "../models/User";
-import AvatarForm, { schemaImage } from "./AvatarForm";
-import UserForm, { TFormUserData } from "./UserForm";
+import * as yup from "yup";
 
-export default function AccountPage() {
-  const session = useSession();
-
+function UserPage({ params }: { params: { id: string } }) {
   const {
-    data: profileData,
-    error: errorProfile,
-    isLoading: isLoadingProfile,
-    mutate: mutateProfile,
-  } = useSWR<TUser>("/api/profile", fetcher);
+    data: userData,
+    isLoading: isLoadingUserData,
+    mutate: mutateUserData,
+  } = useSWR<TUser & { _id: string }>(`/api/profile?_id=${params.id}`, fetcher);
 
-  console.log("profileData", profileData);
+  console.log("userData", userData);
 
-  if (session.status === "unauthenticated") {
-    return redirect("/login");
-  }
+  const onSubmitUserForm: SubmitHandler<TFormUserData> = async (data) => {
+    if (!userData) return;
 
-  const { status, data } = session;
-  const user = data?.user;
-
-  const onSubmit: SubmitHandler<TFormUserData> = async (data) => {
     toast.promise(
       fetch("/api/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: data.name }),
-      })
-        .then((res) => res.json())
-        .then((res) => {}),
+        body: JSON.stringify({
+          _id: userData._id,
+          name: data.name,
+        }),
+      }).then((res) => res.json()),
       {
         loading: "Updating profile...",
         success: "Profile updated!",
@@ -55,12 +45,17 @@ export default function AccountPage() {
   const onImageSubmit: SubmitHandler<
     yup.InferType<typeof schemaImage>
   > = async (data) => {
+    if (!userData) {
+      return;
+    }
     if (!data.image || data.image.length === 0) {
       return;
     }
+
     const formData = new FormData();
 
     // TODO: check why data.image is [object File]
+    // formData.set("file", getValuesImage("image")![0]);
     formData.set("file", data.image[0]);
 
     const uploadPromise = fetch("/api/uploadImage", {
@@ -79,9 +74,13 @@ export default function AccountPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ image: link }),
+          body: JSON.stringify({
+            _id: userData._id,
+            image: link,
+          }),
         }).then(() => {
-          mutateProfile();
+          //   setValueImage("image", undefined);
+          mutateUserData();
         });
       });
 
@@ -92,10 +91,13 @@ export default function AccountPage() {
     });
   };
 
-  const onAddressSubmit = async (data: any) => {
+  const onAddressSubmit: SubmitHandler<TAddressValues> = async (data: any) => {
+    if (!userData) {
+      return;
+    }
     const savePromise = fetch("/api/profile", {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, _id: userData._id }),
     }).then((res) => {
       if (res.ok) {
         return res.json();
@@ -110,24 +112,27 @@ export default function AccountPage() {
     });
   };
 
-  if (isLoadingProfile) {
+  if (isLoadingUserData) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="flex flex-col gap-20">
       <div className="">
+        <h1 className="text-4xl font-extrabold mb-8">
+          {userData?.name || "No name"} ({userData?.email})
+        </h1>
         <h2 className="text-2xl font-extrabold mb-8">Personal</h2>
         <div className="flex items-start justify-center gap-20">
           <AvatarForm
             onSubmit={onImageSubmit}
-            defaultValues={{ image: profileData?.image || undefined }}
+            defaultValues={{ image: userData?.image || undefined }}
           />
           <UserForm
-            onSubmit={onSubmit}
+            onSubmit={onSubmitUserForm}
             defaultValues={{
-              name: profileData?.name || undefined,
-              email: profileData?.email || undefined,
+              name: userData?.name || undefined,
+              email: userData?.email || undefined,
             }}
           />
         </div>
@@ -135,14 +140,16 @@ export default function AccountPage() {
       <AddressForm
         onSubmit={onAddressSubmit}
         defaultValues={{
-          streetAddress: profileData?.streetAddress || undefined,
-          city: profileData?.city || undefined,
-          zip: profileData?.zip || undefined,
-          country: profileData?.country || undefined,
-          phoneNumber: profileData?.phoneNumber || undefined,
-          state: profileData?.state || undefined,
+          streetAddress: userData?.streetAddress || undefined,
+          city: userData?.city || undefined,
+          zip: userData?.zip || undefined,
+          country: userData?.country || undefined,
+          phoneNumber: userData?.phoneNumber || undefined,
+          state: userData?.state || undefined,
         }}
       />
     </div>
   );
 }
+
+export default UserPage;

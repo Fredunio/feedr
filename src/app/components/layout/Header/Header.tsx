@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import AvatarButton from "./AvatarButton";
+import CartButton from "./CartButton";
 
 export default function Header() {
   const session = useSession();
@@ -26,17 +27,21 @@ export default function Header() {
           </div>
         </Link>
         <nav className="flex text-slate-700 items-center gap-4">
-          <HeaderLink href={""}>Menu</HeaderLink>
-          <HeaderLink href={""}>About</HeaderLink>
-          <HeaderLink href={""}>Contact</HeaderLink>
+          <HeaderLink href={"/menu"}>Menu</HeaderLink>
+          <HeaderLink href={"#about"}>About</HeaderLink>
+          <HeaderLink href={"#contact"}>Contact</HeaderLink>
         </nav>
       </div>
       {session.status === "authenticated" ? (
-        <div>
+        <div className="flex items-center gap-4">
+          <CartButton />
+
           <AvatarButton user={session.data.user} />
         </div>
       ) : (
         <div className="flex items-center gap-4">
+          <CartButton />
+
           <Link
             className=" shadow-md transition-colors duration-100 px-4 py-1 rounded-md hover:bg-primaryLight active:bg-primaryDark"
             href={"/login"}
@@ -59,7 +64,7 @@ function HeaderLink({ href, children }: { href: string; children: any }) {
   return (
     <Link
       href={href}
-      className="hover:text-primary hover:shadow-md transition-all shadow-sm border-1 border-slate-100 rounded-md px-2 "
+      className=" hover:text-primary hover:shadow-md transition-all shadow-sm border-1 border-slate-100 rounded-md px-2 "
     >
       {children}
     </Link>

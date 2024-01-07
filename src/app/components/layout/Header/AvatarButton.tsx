@@ -7,7 +7,7 @@ import React from "react";
 function AvatarButton({ user }: { user: Session["user"] | undefined }) {
   return (
     <div className="relative group inline-block ">
-      <div>
+      <div className="flex items-center justify-center">
         <button
           type="button"
           className="w-10 h-10 rounded-full shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"

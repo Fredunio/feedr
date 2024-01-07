@@ -52,36 +52,6 @@ function MenuItemPage({ params }: { params: { id: string } }) {
     });
 
     toast.success("Item Edited");
-    // const uploadPromise = fetch("/api/uploadImage", {
-    //   method: "POST",
-    //   body: formData,
-    // })
-    //   .then((res) => {
-    //     if (res.ok) {
-    //       return res.json();
-    //     }
-    //     throw new Error("Error uploading image");
-    //   })
-    //   .then((link) => {
-
-    //     const { image, ...rest } = data;
-
-    //     fetch("/api/menuItems", {
-    //       method: "POST",
-    //       body: JSON.stringify({ ...rest, image: link }),
-    //     }).then((res) => {
-    //       if (res.ok) {
-    //         return res.json();
-    //       }
-    //       throw new Error("Error adding Menu Item");
-    //     });
-    //   });
-
-    // await toast.promise(uploadPromise, {
-    //   loading: "Adding Menu Item...",
-    //   success: "Menu Item Added",
-    //   error: "Error Adding Menu Item",
-    // });
   };
 
   return (

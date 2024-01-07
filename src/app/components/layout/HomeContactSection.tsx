@@ -3,7 +3,7 @@ import SectionHeaders from "./SectionHeader";
 
 function HomeContactSection() {
   return (
-    <div>
+    <div id="contact" className="py-20">
       <div className="text-center mb-4">
         <SectionHeaders mainHeader={"Contact"} />
         <div className="flex items-center justify-center">

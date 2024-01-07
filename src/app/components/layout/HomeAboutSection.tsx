@@ -3,7 +3,7 @@ import SectionHeaders from "./SectionHeader";
 
 function HomeAboutSection() {
   return (
-    <div>
+    <div id="about" className="py-20">
       <div className="text-center mb-4">
         <SectionHeaders mainHeader={"About Us"} />
       </div>
